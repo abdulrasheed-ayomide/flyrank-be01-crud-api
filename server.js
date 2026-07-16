@@ -66,6 +66,36 @@ app.post("/tasks", (req, res)=> {
         res.status(201).json(newTask)
 })
 
+app.put("/tasks/:id", (req, res)=> {
+    const id = Number(req.params.id)
+    const task = tasks.find((item) => item.id === id)
+
+    if (!task) {
+        return res.status(404).json({ error: `Task with ID ${id} not found` })
+    }
+
+    const { title, done } = req.body;
+    if (!title || typeof title !== 'string') {
+        return res.status(400).json({ error: "Title is required and must be a string" })
+    }
+
+    task.title = title;
+    task.done = done;
+    res.json(task)
+})
+
+app.delete("/tasks/:id", (req, res)=> {
+    const id = Number(req.params.id)
+    const task = tasks.find((item) => item.id === id)
+
+    if (!task) {
+        return res.status(404).json({ error: `Task with ID ${id} not found` })
+    }
+
+    tasks.splice(tasks.indexOf(task), 1)
+    res.sendStatus(204)
+})
+
 app.listen(PORT, ()=>{
     console.log(`Server is running on http://localhost:${PORT}`);
 })
