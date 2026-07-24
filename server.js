@@ -1,7 +1,17 @@
 const swaggerUi = require("swagger-ui-express");
 const YAML = require("yamljs");
 const swaggerDocument = YAML.load("./swagger.yaml");
-const express =  require('express');
+const express = require('express');
+const Database = require('better-sqlite3');
+const db = new Database("tasks.db");
+
+db.prepare(`
+  CREATE TABLE IF NOT EXISTS tasks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    done INTEGER NOT NULL
+  )
+`).run();
 
 const app = express();
 app.use(express.json());
@@ -26,25 +36,25 @@ const tasks = [
 ];
 
 
-app.get("/", (req, res)=>{
+app.get("/", (req, res) => {
     res.json({
-  "name": "Task API",
-  "version": "1.0",
-  "endpoints": ["/tasks"]
-})
+        "name": "Task API",
+        "version": "1.0",
+        "endpoints": ["/tasks"]
+    })
 })
 
-app.get("/health", (req, res)=>{
+app.get("/health", (req, res) => {
     res.json({
         "status": "ok"
     })
 })
 
-app.get("/tasks", (req, res)=> {
+app.get("/tasks", (req, res) => {
     res.json(tasks)
 })
 
-app.get("/tasks/:id", (req, res)=> {
+app.get("/tasks/:id", (req, res) => {
     const id = Number(req.params.id)
     const task = tasks.find((item) => item.id === id)
 
@@ -55,21 +65,21 @@ app.get("/tasks/:id", (req, res)=> {
     res.json(task)
 })
 
-app.post("/tasks", (req, res)=> {
+app.post("/tasks", (req, res) => {
     const { title } = req.body;
-        if(!title || typeof title !== 'string') {
-            return res.status(400).json({ error: "Title is required and must be a string" })
-        }
-        const newTask = {
-            id: tasks.length + 1,
-            title,
-            done: false
-        }
-        tasks.push(newTask)
-        res.status(201).json(newTask)
+    if (!title || typeof title !== 'string') {
+        return res.status(400).json({ error: "Title is required and must be a string" })
+    }
+    const newTask = {
+        id: tasks.length + 1,
+        title,
+        done: false
+    }
+    tasks.push(newTask)
+    res.status(201).json(newTask)
 })
 
-app.put("/tasks/:id", (req, res)=> {
+app.put("/tasks/:id", (req, res) => {
     const id = Number(req.params.id)
     const task = tasks.find((item) => item.id === id)
 
@@ -87,7 +97,7 @@ app.put("/tasks/:id", (req, res)=> {
     res.json(task)
 })
 
-app.delete("/tasks/:id", (req, res)=> {
+app.delete("/tasks/:id", (req, res) => {
     const id = Number(req.params.id)
     const task = tasks.find((item) => item.id === id)
 
@@ -101,6 +111,6 @@ app.delete("/tasks/:id", (req, res)=> {
 
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-app.listen(PORT, ()=>{
+app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 })
