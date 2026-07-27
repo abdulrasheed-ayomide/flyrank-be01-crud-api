@@ -3,20 +3,7 @@ const YAML = require("yamljs");
 const swaggerDocument = YAML.load("./swagger.yaml");
 const express = require('express');
 const Database = require('better-sqlite3');
-const db = new Database("tasks.db");
 
-db.prepare(`
-  CREATE TABLE IF NOT EXISTS tasks (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    title TEXT NOT NULL,
-    done INTEGER NOT NULL
-  )
-`).run();
-
-const app = express();
-app.use(express.json());
-
-const PORT = 3000;
 const tasks = [
     {
         id: 1,
@@ -34,6 +21,35 @@ const tasks = [
         done: false
     },
 ];
+const db = new Database("tasks.db");
+
+db.prepare(`
+  CREATE TABLE IF NOT EXISTS tasks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    done INTEGER NOT NULL
+  )
+`).run();
+
+const count = db.prepare("SELECT COUNT(*) AS total FROM tasks").get();
+
+if (count.total === 0) {
+    const insert = db.prepare(
+        "INSERT INTO tasks (title, done) VALUES (?, ?)"
+    );
+
+    tasks.forEach((task) => {
+        insert.run(task.title, task.done ? 1 : 0);
+    });
+
+    console.log("Database seeded successfully!");
+}
+
+const app = express();
+app.use(express.json());
+
+const PORT = 3000;
+
 
 
 app.get("/", (req, res) => {
@@ -51,12 +67,13 @@ app.get("/health", (req, res) => {
 })
 
 app.get("/tasks", (req, res) => {
-    res.json(tasks)
-})
+    const rows = db.prepare("SELECT * FROM tasks").all();
+    res.json(rows);
+});
 
 app.get("/tasks/:id", (req, res) => {
     const id = Number(req.params.id)
-    const task = tasks.find((item) => item.id === id)
+    const task = db.prepare("SELECT * FROM tasks WHERE id = ?").get(id);
 
     if (!task) {
         return res.status(404).json({ error: `Task with ID ${id} not found` })
@@ -70,18 +87,13 @@ app.post("/tasks", (req, res) => {
     if (!title || typeof title !== 'string') {
         return res.status(400).json({ error: "Title is required and must be a string" })
     }
-    const newTask = {
-        id: tasks.length + 1,
-        title,
-        done: false
-    }
-    tasks.push(newTask)
-    res.status(201).json(newTask)
-})
+    const newTask = db.prepare("INSERT INTO tasks (title, done) VALUES (?, ?)").run(title, false);
+    res.status(201).json({ id: newTask.lastInsertRowid, title, done: false });
+});
 
 app.put("/tasks/:id", (req, res) => {
     const id = Number(req.params.id)
-    const task = tasks.find((item) => item.id === id)
+    const task = db.prepare("SELECT * FROM tasks WHERE id = ?").get(id);
 
     if (!task) {
         return res.status(404).json({ error: `Task with ID ${id} not found` })
@@ -99,7 +111,7 @@ app.put("/tasks/:id", (req, res) => {
 
 app.delete("/tasks/:id", (req, res) => {
     const id = Number(req.params.id)
-    const task = tasks.find((item) => item.id === id)
+    const task = db.prepare("SELECT * FROM tasks WHERE id = ?").get(id);
 
     if (!task) {
         return res.status(404).json({ error: `Task with ID ${id} not found` })
