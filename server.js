@@ -104,9 +104,15 @@ app.put("/tasks/:id", (req, res) => {
         return res.status(400).json({ error: "Title is required and must be a string" })
     }
 
-    task.title = title;
-    task.done = done;
-    res.json(task)
+    // task.title = title;
+    // task.done = done;
+    // res.json(task)
+
+    db.prepare("UPDATE tasks SET title = ?, done = ? WHERE id = ?").run(title, done ? 1 : 0, id);
+
+    const updatedTask = db.prepare("SELECT * FROM tasks WHERE id = ?").get(id);
+
+    res.json(updatedTask);
 })
 
 app.delete("/tasks/:id", (req, res) => {
@@ -117,8 +123,9 @@ app.delete("/tasks/:id", (req, res) => {
         return res.status(404).json({ error: `Task with ID ${id} not found` })
     }
 
-    tasks.splice(tasks.indexOf(task), 1)
-    res.sendStatus(204)
+    db.prepare("DELETE FROM tasks WHERE id = ?").run(id);
+
+    res.sendStatus(204);
 })
 
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
