@@ -87,7 +87,7 @@ app.post("/tasks", (req, res) => {
     if (!title || typeof title !== 'string') {
         return res.status(400).json({ error: "Title is required and must be a string" })
     }
-    const newTask = db.prepare("INSERT INTO tasks (title, done) VALUES (?, ?)").run(title, false);
+    const newTask = db.prepare("INSERT INTO tasks (title, done) VALUES (?, ?)").run(title, 0);
     res.status(201).json({ id: newTask.lastInsertRowid, title, done: false });
 });
 
