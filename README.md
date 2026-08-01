@@ -1,32 +1,42 @@
-# Task API
+# Task API with SQLite
 
-A simple RESTful CRUD API built with **Node.js** and **Express.js** as part of the **FlyRank Backend Engineering Internship – Week 2 Assignment (BE-01)**.
+A simple RESTful CRUD API built with **Node.js**, **Express.js**, and **SQLite** as part of the **FlyRank Backend Engineering Internship – Week 3 Assignment (A2)**.
 
-This API allows users to create, read, update, and delete tasks using standard HTTP methods. The project also includes interactive API documentation using **Swagger UI**.
+This project extends the previous CRUD API by replacing the in-memory storage with a **SQLite database**, allowing tasks to persist even after the server restarts. The API also includes interactive documentation using **Swagger UI**.
 
 ---
 
 # Features
 
-* Create a new task
-* Retrieve all tasks
-* Retrieve a single task by ID
-* Update an existing task
-* Delete a task
-* Health check endpoint
-* Interactive API documentation with Swagger UI
-* Input validation
-* Proper HTTP status codes
-* In-memory data storage (no database)
+- Create a new task
+- Retrieve all tasks
+- Retrieve a task by ID
+- Update an existing task
+- Delete a task
+- Health check endpoint
+- Interactive API documentation with Swagger UI
+- Input validation
+- Proper HTTP status codes
+- SQLite database for persistent storage
+- Automatic database and table creation
+- Automatic seeding of sample tasks on first run
 
 ---
 
 # Technologies Used
 
-* Node.js
-* Express.js
-* Swagger UI Express
-* YAMLJS
+- Node.js
+- Express.js
+- SQLite
+- better-sqlite3
+- Swagger UI Express
+- YAMLJS
+
+---
+
+# Why SQLite?
+
+SQLite was chosen because it is lightweight, requires no separate database server, stores data in a single file (`tasks.db`), and automatically preserves data after the server restarts. It is ideal for learning backend development and building small applications.
 
 ---
 
@@ -60,117 +70,29 @@ Start the application:
 npm start
 ```
 
-The server will run at:
+The server runs at:
 
 ```
 http://localhost:3000
 ```
 
----
+When the server starts for the first time:
 
-# API Endpoints
-
-| Method | Endpoint   | Description              |
-| ------ | ---------- | ------------------------ |
-| GET    | /          | Returns API information  |
-| GET    | /health    | Checks server health     |
-| GET    | /tasks     | Returns all tasks        |
-| GET    | /tasks/:id | Returns a task by ID     |
-| POST   | /tasks     | Creates a new task       |
-| PUT    | /tasks/:id | Updates an existing task |
-| DELETE | /tasks/:id | Deletes a task           |
+- `tasks.db` is created automatically.
+- The `tasks` table is created automatically.
+- Three sample tasks are inserted only if the table is empty.
 
 ---
-
-# Example Request
-
-Retrieve all tasks:
-
-```bash
-curl -i http://localhost:3000/tasks
-```
-
-Example Response:
-
-```http
-HTTP/1.1 200 OK
-Content-Type: application/json
-```
-
-```json
-[
-  {
-    "id": 1,
-    "title": "Learn Express",
-    "done": false
-  },
-  {
-    "id": 2,
-    "title": "Build CRUD API",
-    "done": false
-  },
-  {
-    "id": 3,
-    "title": "Push to Github",
-    "done": false
-  }
-]
-```
-
----
-
-# Example POST Request
-
-```bash
-curl -X POST http://localhost:3000/tasks \
--H "Content-Type: application/json" \
--d "{\"title\":\"Buy milk\"}"
-```
-
-Response:
-
-```json
-{
-  "id": 4,
-  "title": "Buy milk",
-  "done": false
-}
-```
-
----
-
-# HTTP Status Codes
-
-| Status Code | Meaning                       |
-| ----------- | ----------------------------- |
-| 200         | Successful request            |
-| 201         | Resource created successfully |
-| 204         | Resource deleted successfully |
-| 400         | Invalid request data          |
-| 404         | Task not found                |
-
----
-
-## Swagger UI
-
-Interactive API documentation is available at:
-
-```text
-http://localhost:3000/docs
-```
-
-### Swagger UI Screenshot
-
-![Swagger UI](swagger-ui.png)
 
 # Project Structure
 
-```
+```text
 flyrank-be01-crud-api
 │
 ├── node_modules/
 ├── server.js
 ├── swagger.yaml
+├── tasks.db
 ├── package.json
 ├── package-lock.json
 ├── README.md
@@ -179,33 +101,127 @@ flyrank-be01-crud-api
 
 ---
 
+# API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | / | API information |
+| GET | /health | Server health |
+| GET | /tasks | Get all tasks |
+| GET | /tasks/:id | Get one task |
+| POST | /tasks | Create a task |
+| PUT | /tasks/:id | Update a task |
+| DELETE | /tasks/:id | Delete a task |
+
+---
+
+# Example SQL Query
+
+```sql
+SELECT * FROM tasks WHERE done = 1;
+```
+
+This query returns all completed tasks stored in the database.
+
+---
+
+# Example API Request
+
+```bash
+curl http://localhost:3000/tasks
+```
+
+Example Response:
+
+```json
+[
+  {
+    "id": 1,
+    "title": "Learn SQLite",
+    "done": 1
+  },
+  {
+    "id": 2,
+    "title": "Build CRUD API",
+    "done": 0
+  },
+  {
+    "id": 3,
+    "title": "Push to Github",
+    "done": 0
+  }
+]
+```
+
+---
+
+# HTTP Status Codes
+
+| Status Code | Meaning |
+|-------------|---------|
+| 200 | OK |
+| 201 | Created |
+| 204 | No Content |
+| 400 | Bad Request |
+| 404 | Not Found |
+
+---
+
+# Swagger UI
+
+Interactive API documentation is available at:
+
+```
+http://localhost:3000/docs
+```
+
+### Swagger Screenshot
+
+![Swagger UI screenshot](swagger-ui.png)
+
+---
+
+# SQLite Database Screenshot
+
+![SQLite Database Screenshot](database-screenshot.png)
+
+---
+
 # Testing
 
 The API was tested using:
 
-* Swagger UI
-* curl
-* Browser
+- Swagger UI
+- curl
+- DB Browser for SQLite
 
-All CRUD operations were successfully verified.
+All CRUD operations were successfully tested, including persistence after restarting the server.
 
 ---
 
 # Assignment Requirements Completed
 
-* Hello World server
-* Root endpoint
-* Health endpoint
-* Read all tasks
-* Read single task
-* Create task
-* Update task
-* Delete task
-* Input validation
-* Proper HTTP status codes
-* Swagger UI documentation
-* Public GitHub repository
-* Multiple Git commits
+- Create SQLite database automatically
+- Create tasks table automatically
+- Seed sample tasks once
+- Read tasks from SQLite
+- Create tasks in SQLite
+- Update tasks in SQLite
+- Delete tasks from SQLite
+- Parameterized SQL queries
+- Proper HTTP status codes
+- Swagger documentation
+- Database persists after server restart
+- Public GitHub repository
+- Multiple Git commits
+
+---
+
+# Notes
+
+- The database file (`tasks.db`) is automatically created if it does not exist.
+- Sample tasks are inserted only on the first run.
+- Data remains available even after restarting the server.
 
 ---
 
